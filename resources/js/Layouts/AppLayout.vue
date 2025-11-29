@@ -189,7 +189,6 @@ import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
-import Login from '@/Pages/Auth/Login.vue';
 import ConfirmationModalWrapper from '@/Components/ConfirmationModalWrapper.vue';
 
 defineProps({
@@ -209,6 +208,12 @@ const menuItems = [
     url: route('posts.index'),
     route: 'posts.index',
     // when: () => usePage().props.auth.user
+  },
+  {
+    name: "Create a Post",
+    url: route('posts.create'),
+    route: 'posts.create',
+    when: () => usePage().props.permissions.create_posts,
   }
 ];
 

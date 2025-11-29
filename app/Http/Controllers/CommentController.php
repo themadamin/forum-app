@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Comment;
 use App\Models\Post;
+use App\Policies\CommentPolicy;
+use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Http\Request;
 
+#[UsePolicy(CommentPolicy::class)]
 class CommentController extends Controller
 {
     public function store(Request $request, Post $post)
@@ -18,18 +21,18 @@ class CommentController extends Controller
             'body'    => $request->input('body'),
         ]);
 
-        return to_route('posts.show', $post)
+        return redirect($post->showRoute())
             ->banner('Comment added.');
     }
 
     public function update(Request $request, Comment $comment)
     {
+        $request->user()->can('update', $comment);
         $data = $request->validate(['body' => ['required', 'string', 'max:2500']]);
 
         $comment->update($data);
 
-        return to_route('posts.show',
-            ['post' => $comment->post_id, 'page' => $request->query('page')])
+        return redirect($comment->post->showRoute(['page' => $request->query('page')]))
             ->banner('Comment updated.');
     }
 
