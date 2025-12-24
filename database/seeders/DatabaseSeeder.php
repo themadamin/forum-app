@@ -11,8 +11,6 @@ use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
     /**
      * Seed the application's database.
      */
@@ -21,11 +19,12 @@ class DatabaseSeeder extends Seeder
         $users = User::factory(20)->create();
 
         $posts = Post::factory(200)
+            ->withFixture()
             ->has(Comment::factory(15)->recycle($users))
             ->recycle($users)
             ->create();
 
-        User::factory()->has(Post::factory(30))
+        User::factory()->has(Post::factory(35)->withFixture())
             ->has(Comment::factory(100)->recycle($posts))
             ->create([
                 'name' => 'themadamin',

@@ -20,6 +20,7 @@ class PostResource extends JsonResource
             'comments'   => CommentResource::collection($this->whenLoaded('comments')),
             'title'      => $this->title,
             'body'       => $this->body,
+            'html'       => $this->html,
             'updated_at' => $this->updated_at,
             'created_at' => $this->created_at,
             'routes' => [
