@@ -2,7 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Models\Topic;
 use App\Models\User;
+use App\Support\PostFixtures;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
@@ -24,28 +26,15 @@ class PostFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
+            'topic_id' => Topic::factory(),
             'title'   => str(fake()->sentence)->beforeLast('.')->title(),
             'body'    => Collection::times(4, fn() => fake()->realText(1250))->join(PHP_EOL . PHP_EOL),
+            'likes_count' => 0
         ];
     }
 
     public function withFixture(): static
     {
-        $contents = static::getFixtures()->first();
-
-        $posts = static::getFixtures()
-            ->map(fn (string $contents) => str($contents)->trim()->split('/\R/', 2))
-            ->map(fn (Collection $parts) => [
-                'title' => str($parts->get(0, ''))->trim()->after('# '),
-                'body'  => str($parts->get(1, ''))->trim(),
-            ]);
-
-        return $this->sequence(...$posts);
-    }
-
-    private static function getFixtures(): Collection
-    {
-        return self::$fixtures ??= collect(File::files(database_path('factories/fixtures/posts')))
-            ->map(fn (SplFileInfo $fileInfo) => $fileInfo->getContents());
+        return $this->sequence(...PostFixtures::getFixtures());
     }
 }

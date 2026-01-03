@@ -1,8 +1,29 @@
 <template>
+  <Head>
+    <link rel="canonical" :href="post.routes.show" />
+  </Head>
   <AppLayout :title="post.title">
     <Container>
-      <h1 class="text-2xl font-bold">{{ post.title }}</h1>
-      <span class="block mt-1 text-sm text-gray-600">{{ formattedDate }} ago by {{ post.user.name }}</span>
+      <Pill :href="route('posts.index', {topic: post.topic.slug})">{{ post.topic.name }}</Pill>
+      <PageHeading class="mt-2">{{ post.title }}</PageHeading>
+      <span class="block mt-1 text-sm text-gray-600">
+        {{ formattedDate }} by {{ post.user.name }}
+      </span>
+
+      <div class="mt-4">
+        <span class="text-pink-500 font-bold">{{ post.likes_count }} likes</span>
+
+        <div v-if="$page.props.auth.user" class="mt-2">
+          <Link v-if="post.can.like" :href="route('likes.store', ['post', post.id])" method="post" class="inline-block bg-indigo-600 hover:bg-pink-500 transition-colors text-white py-1.5 px-3 rounded-full">
+            <HandThumbUpIcon class="size-4 inline-block mr-1"/>
+            Like Post
+          </Link>
+          <Link v-else :href="route('likes.destroy', ['post', post.id])" method="delete" class="inline-block bg-indigo-600 hover:bg-pink-500 transition-colors text-white py-1.5 px-3 rounded-full">
+            <HandThumbDownIcon class="size-4 inline-block mr-1"/>
+            Unlike Post
+          </Link>
+        </div>
+      </div>
 
       <article class="mt-6 prose prose-sm max-w-none" v-html="post.html">
       </article>
@@ -13,7 +34,7 @@
               class="mt-4">
           <div>
             <InputLabel for="body" class="sr-only">Comment</InputLabel>
-            <MarkdownEditor ref="commentTextAreaRef" id="body" v-model="commentForm.body" placeholder="Speak your mind Spock…" editorClass="min-h-[160px]"/>
+            <MarkdownEditor ref="commentTextAreaRef" id="body" v-model="commentForm.body" placeholder="Speak your mind Spock…" editorClass="!min-h-[160px]"/>
             <InputError :message="commentForm.errors.body" class="mt-1"/>
           </div>
 
@@ -45,9 +66,12 @@ import InputLabel from '@/Components/InputLabel.vue';
 import MarkdownEditor from "@/Components/MarkdownEditor.vue";
 import InputError from '@/Components/InputError.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
-import { router, useForm } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import { useConfirm } from "@/Utilities/Composables/useConfirm.js";
+import PageHeading from '@/Components/PageHeading.vue';
+import Pill from '@/Components/Pill.vue';
+import {HandThumbUpIcon, HandThumbDownIcon} from "@heroicons/vue/20/solid/index.js";
 
 const props = defineProps(['post', 'comments']);
 
@@ -87,7 +111,9 @@ const updateComment = async () => {
 
   commentForm.put(route('comments.update', {
     comment: commentIdBeingEdited.value,
-    page: props.comments.meta.current_page,
+    page: props.comments.data.length > 1
+        ? props.comments.meta.current_page
+        : Math.max(props.comments.meta.current_page - 1, 1)
   }), {
     preserveScroll: true,
     onSuccess: cancelEditComment,

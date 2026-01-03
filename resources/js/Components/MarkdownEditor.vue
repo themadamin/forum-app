@@ -107,7 +107,7 @@
 </template>
 
 <script setup>
-import { watch, onBeforeUnmount } from 'vue';
+import { watch, onBeforeUnmount, onMounted } from 'vue';
 import { EditorContent, useEditor } from '@tiptap/vue-3';
 import StarterKit from '@tiptap/starter-kit';
 import { Markdown } from '@tiptap/markdown';
@@ -116,17 +116,13 @@ import 'remixicon/fonts/remixicon.css';
 import {Placeholder} from "@tiptap/extension-placeholder";
 
 const props = defineProps({
-  modelValue: {
-    type: String,
-    default: '',
-  },
   editorClass: '',
   placeholder: null,
 });
 
-const emit = defineEmits(['update:modelValue']);
+const model = defineModel();
 
-const hasInitialMarkdown = !!props.modelValue;
+const hasInitialMarkdown = !!model;
 
 const editor = useEditor({
   extensions: [
@@ -143,7 +139,7 @@ const editor = useEditor({
       placeholder: props.placeholder,
     }),
   ],
-  content: props.modelValue || '',
+  content: model || '',
   ...(hasInitialMarkdown
       ? { contentType: 'markdown' }
       : {}),
@@ -155,31 +151,32 @@ const editor = useEditor({
   },
 
   onUpdate: ({ editor }) => {
-    const markdown = editor.getMarkdown();
-    emit('update:modelValue', markdown);
+    model.value = editor.getMarkdown();
   },
 });
 
 defineExpose({focus: () => editor.value.commands.focus()});
 
-watch(
-    () => props.modelValue,
-    (value) => {
-      const e = editor.value;
-      if (!e) return;
+onMounted(() => {
+  watch(
+      () => model,
+      (value) => {
+        const e = editor.value;
+        if (!e) return;
 
-      const current = e.getMarkdown();
-      if (value === current) return;
+        const current = e.getMarkdown();
+        if (value === current) return;
 
-      if (!value) {
-        e.commands.clearContent(true);
-        return;
-      }
+        if (!value) {
+          e.commands.clearContent(true);
+          return;
+        }
 
-      e.commands.setContent(value, { contentType: 'markdown' });
-    },
-    { immediate: true },
-);
+        e.commands.setContent(value, { contentType: 'markdown' });
+      },
+      { immediate: true },
+  );
+});
 
 onBeforeUnmount(() => {
   editor.value?.destroy();
